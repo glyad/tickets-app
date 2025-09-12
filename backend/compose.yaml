@@ -1,0 +1,7 @@
+﻿services:
+  tickets.services.api:
+    image: tickets.services.api
+    build:
+      context: .
+      dockerfile: Tickets.Services.Api/Dockerfile
+
