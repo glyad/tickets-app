@@ -1,5 +1,6 @@
 import React from 'react';
 import { Ticket } from './model';
+import { useAppStore } from './state/app-state';
 
 interface ActionButtonRendererProps {
   data: Ticket;
@@ -7,12 +8,14 @@ interface ActionButtonRendererProps {
 
 export const ActionButtonRenderer = (props: ActionButtonRendererProps) => {
 
+  const { updateTicket, deleteTicket } = useAppStore();
+
   const handleEdit = () => {
     alert(`Edit button clicked for ticket: ${props?.data?.title}`);
   };
 
   const handleDelete = () => {
-    alert(`Delete button clicked for ticket: ${props?.data?.title}`);
+    deleteTicket(props?.data?.id);
   };
   
   return (

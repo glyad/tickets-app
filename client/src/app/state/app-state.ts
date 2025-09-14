@@ -16,7 +16,10 @@ interface AppState {
     startLoadingData: () => void;
     stopDataLoading: () => void;
 
-    updateTicket: (updatedTicket: Ticket) => void;
+    readTickets: () => Promise<void>;
+    readTicket: (ticketId: string) => Promise<void>;
+    updateTicket: (updatedTicket: Ticket) => Promise<void>;
+    deleteTicket: (ticketId: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -25,17 +28,32 @@ export const useAppStore = create<AppState>()((set, get) => ({
     startLoadingData: (): void => set(() => ({ isDataLoading: true })),
     stopDataLoading: (): void => set(() => ({ isDataLoading: false })),
 
-    updateTicket: (updatedTicket: Ticket): void => {
-        const tickets = get().tickets.find(ticket => ticket.id === updatedTicket.id);
-        if (tickets) {
-            set(state => ({
-                tickets: state.tickets.map(ticket =>
-                    ticket.id === updatedTicket.id ? { ...ticket, ...updatedTicket } : ticket
-                )
-            }));
-        }
+    readTickets: async (): Promise<void> => {},
+
+    readTicket: async (ticketId: string): Promise<void> => {
+      // This would normally fetch the ticket from a service
+      // and update the state with the fetched ticket
     },
 
+    updateTicket: async (updatedTicket: Ticket): Promise<void> => {
+      const tickets = get().tickets.find(ticket => ticket.id === updatedTicket.id);
+      if (tickets) {
+        set(state => ({
+            // service call to update the ticket would go here
+            // and then update the state with the updated ticket
+            tickets: state.tickets.map(ticket =>
+                ticket.id === updatedTicket.id ? { ...ticket, ...updatedTicket } : ticket
+            )
+        }));
+      }
+    },
+
+    deleteTicket: async(ticketId: string) => {
+        set(state => ({
+          tickets: state.tickets.filter(ticket => ticket.id !== ticketId)
+        }));
+    },
+    
     statuses: [
         { label: 'Open', value: 0 },
         { label: 'In Progress', value: 1 },

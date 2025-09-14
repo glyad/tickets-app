@@ -45,7 +45,7 @@ export default function Home() {
   const rowSelection: RowSelectionOptions = {
     mode: 'singleRow'
   };
-  const assigneeNames = useMemo(() => state.assignees, [state.assignees]);
+  
   const [columnDefs] = useState([
     { field: 'title', headerName: 'Title', sortable: true, filter: "agTextColumnFilter", flex: 2 }, {
       field: 'status',
