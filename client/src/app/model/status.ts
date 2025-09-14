@@ -1,4 +1,4 @@
-export interface Assignee {
+export interface Status {
   label: string;
   value: number;
 }
