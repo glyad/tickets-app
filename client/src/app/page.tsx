@@ -5,7 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import styles from "./page.module.css";
 import { useAppStore } from "./state/app-state";
 import { Assignee, Priority, Status, Ticket } from "./model";
-import { AllCommunityModule, ColDef, GridReadyEvent, ModuleRegistry, RowSelectionOptions, SelectEditorModule } from 'ag-grid-community'; 
+import { AllCommunityModule, GridReadyEvent, ModuleRegistry, RowSelectionOptions, SelectEditorModule, SideBarDef } from 'ag-grid-community'; 
 import { ActionButtonRenderer } from "./action-button-renderer";
 import {
   AllEnterpriseModule,
@@ -37,7 +37,7 @@ LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_ke
 export default function Home() {
   const gridRef = useRef<AgGridReact<Ticket>>(null);
   const onGridReady = useCallback((params: GridReadyEvent) => {
-    //
+    params.api.closeToolPanel();
   }, []);
   
   const state = useAppStore((state) => state);
@@ -46,8 +46,8 @@ export default function Home() {
     mode: 'singleRow'
   };
   const assigneeNames = useMemo(() => state.assignees, [state.assignees]);
-  const [columnDefs, setColumnDefs] = useState([
-    { field: 'title', headerName: 'Title', sortable: true, filter: true, flex: 2 }, {
+  const [columnDefs] = useState([
+    { field: 'title', headerName: 'Title', sortable: true, filter: "agTextColumnFilter", flex: 2 }, {
       field: 'status',
       headerName: 'Status',
       editable: true,
@@ -98,6 +98,27 @@ export default function Home() {
       cellRenderer: ActionButtonRenderer      
     }
   ]); 
+
+  const sideBar: SideBarDef = useMemo(() => { 
+    return {
+      toolPanels: [
+        {
+          id: 'filters',
+          labelDefault: 'Filters',
+          labelKey: 'filters',
+          iconKey: 'filter',
+          toolPanel: 'agFiltersToolPanel',
+          minWidth: 180,
+          maxWidth: 400,
+          width: 250
+        }
+      ],
+      defaultToolPanel: 'filters',
+      
+   };
+      },
+    []);
+  
   
   return (
     <div className={styles.page}>
@@ -110,7 +131,8 @@ export default function Home() {
             pagination={true}
             paginationPageSize={20}
             rowSelection={rowSelection}
-            sideBar={"filters"}            
+            sideBar={sideBar}      
+            onGridReady={onGridReady}      
         />
         </div>
 
