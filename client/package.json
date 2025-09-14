@@ -12,6 +12,7 @@
     "test:report": "playwright show-report"
   },
   "dependencies": {
+    "ag-grid-enterprise": "^34.2.0",
     "ag-grid-react": "^34.2.0",
     "next": "15.5.3",
     "react": "19.1.1",
