@@ -122,27 +122,6 @@ export default function Home() {
    };
   }, []);
     
-  const questionHandler = async () => {
-    const result = await state.showDialog({
-      kind: AppDialogKind.Question,
-      title: "Delete Ticket",
-      message: "Are you sure you want to delete this ticket?",
-      showCancelButton: false,
-    });
-    console.log("Dialog result:", result);
-    switch (result.button) {
-      case AppDialogButton.Yes:
-        console.log("User answered Yes");
-        break;
-      case AppDialogButton.No:
-        console.log("User answered No");
-        break;
-      case AppDialogButton.Cancel:
-        console.log("User cancelled the dialog");
-        break;
-    }
-  }
-
   const inputHandler = async () => {
     const result = await state.showDialog({
       kind: AppDialogKind.InputString,
@@ -157,7 +136,9 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
+        
         <div style={{ width: '1100px', height: 600 }}>
+          <button onClick={inputHandler}>Add Ticket</button>
           <AgGridReact
             ref={gridRef}
             rowData={state.tickets}
@@ -173,9 +154,7 @@ export default function Home() {
         
       </main>
       <footer className={styles.footer}>
-        <button onClick={async () => await state.showError("Error Title", "This is an error message.")}>Show Error Dialog</button>
-        <button onClick={questionHandler}>Show Question Dialog</button>
-        <button onClick={inputHandler}>Show Input Dialog</button>
+        {/* <button onClick={async () => await state.showError("Error Title", "This is an error message.")}>Show Error Dialog</button> */}        
       </footer>
 
       <ModalDialogSwitcher />
