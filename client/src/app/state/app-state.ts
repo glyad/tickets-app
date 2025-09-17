@@ -5,6 +5,7 @@ import {
   Priority,
   Status
 } from "../model";
+import { AppDialog, AppDialogButton, AppDialogKind, AppDialogPayload, AppDialogResult, MessageKind } from "../components/dialog";
 
 interface AppState {
     readonly tickets: Ticket[];
@@ -12,6 +13,7 @@ interface AppState {
     readonly priorities: Priority[];
     readonly assignees: Assignee[];
     readonly isDataLoading: boolean;
+    readonly currentDialog: AppDialog | null;
 
     startLoadingData: () => void;
     stopDataLoading: () => void;
@@ -20,10 +22,14 @@ interface AppState {
     readTicket: (ticketId: string) => Promise<void>;
     updateTicket: (updatedTicket: Ticket) => Promise<void>;
     deleteTicket: (ticketId: string) => Promise<void>;
+
+    showDialog: (payload: AppDialogPayload) => Promise<AppDialogResult>;
+    showError: (title: string, message: string) => Promise<AppDialogResult>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
     isDataLoading: false,
+    currentDialog: null,
 
     startLoadingData: (): void => set(() => ({ isDataLoading: true })),
     stopDataLoading: (): void => set(() => ({ isDataLoading: false })),
@@ -109,5 +115,51 @@ export const useAppStore = create<AppState>()((set, get) => ({
             notes: "Resolved.",
             assignedTo: { value: 2, label: 'Bob' }
         }
-    ]
+    ],
+
+    showDialog: (payload: AppDialogPayload): Promise<AppDialogResult> => {
+        const state = get();
+        if (state.currentDialog !== null) {
+            throw new Error("currentDialog should be null.");
+        }
+
+        const hideDialog = () => set(() => ({ currentDialog: null }));
+
+        const getCurrentDialog = (resolve: (value: AppDialogResult) => void): AppDialog => {
+            const close = (result: AppDialogResult) => {
+                hideDialog();
+                resolve(result);
+            };
+
+            switch (payload.kind) {
+                case AppDialogKind.InputString: return {
+                    ...payload,
+                    ok: (value) => close({ button: AppDialogButton.Ok, kind: payload.kind, value }),
+                    cancel: () => close({ button: AppDialogButton.Cancel }),
+                }
+                case AppDialogKind.Message: return {
+                    ...payload,
+                    close: () => close({ button: AppDialogButton.Close }),
+                }
+                case AppDialogKind.Question: return {
+                    ...payload,
+                    yes: () => close({ button: AppDialogButton.Yes }),
+                    no: () => close({ button: AppDialogButton.No }),
+                    cancel: () => close({ button: AppDialogButton.Cancel }),
+                }
+            }
+        }
+
+        return new Promise<AppDialogResult>((resolve) => {
+            set(() => ({ currentDialog: getCurrentDialog(resolve) }));
+        });
+    },
+
+    showError: (title: string, message: string): Promise<AppDialogResult> =>
+        get().showDialog({
+            kind: AppDialogKind.Message,
+            messageKind: MessageKind.Error,
+            title,
+            message,
+        }),
 }));

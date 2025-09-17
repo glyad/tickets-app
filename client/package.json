@@ -12,9 +12,11 @@
     "test:report": "playwright show-report"
   },
   "dependencies": {
+    "@emotion/styled": "^11.14.1",
     "ag-grid-enterprise": "^34.2.0",
     "ag-grid-react": "^34.2.0",
     "next": "15.5.3",
+    "ramda": "^0.31.3",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "zustand": "^5.0.8"

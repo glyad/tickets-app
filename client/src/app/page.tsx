@@ -5,7 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import styles from "./page.module.css";
 import { useAppStore } from "./state/app-state";
 import { Assignee, Priority, Status, Ticket } from "./model";
-import { AllCommunityModule, GridReadyEvent, ModuleRegistry, RowSelectionOptions, SelectEditorModule, SideBarDef } from 'ag-grid-community'; 
+import { GridReadyEvent, RowSelectionOptions, SideBarDef } from 'ag-grid-community'; 
 import { ActionButtonRenderer } from "./action-button-renderer";
 import {
   AllEnterpriseModule,
@@ -31,8 +31,11 @@ ModuleRegistry.registerModules([
   ValidationModule
 ]);
 
-LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-094359}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{14 October 2025}____[v3]_[0102]_MTc2MDM5NjQwMDAwMA==beb8d54a4d6491a36d345e03edef69f5");
+import { AllCommunityModule, ColDef, ModuleRegistry, SelectEditorModule } from 'ag-grid-community';
+import { ModalDialogSwitcher } from "./components/dialog/modal-dialog-switcher";
+import { AppDialogButton, AppDialogKind } from "./components/dialog";
 
+LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-094359}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{14 October 2025}____[v3]_[0102]_MTc2MDM5NjQwMDAwMA==beb8d54a4d6491a36d345e03edef69f5");
 
 export default function Home() {
   const gridRef = useRef<AgGridReact<Ticket>>(null);
@@ -62,7 +65,8 @@ export default function Home() {
       },
       valueFormatter: (params: { value: Status }) => params.value.label,
       enableCellChangeFlash: true,
-    }, {
+    }, 
+    {
       field: 'priority',
       headerName: 'Priority',
       editable: true,
@@ -74,7 +78,7 @@ export default function Home() {
       cellEditor: 'agSelectCellEditor',
       valueFormatter: (params: { value: Priority }) => params.value.label,
       cellEditorParams: {
-          values: state.priorities
+        values: state.priorities
       },
       enableCellChangeFlash: true,
     }, {
@@ -116,10 +120,40 @@ export default function Home() {
       defaultToolPanel: 'filters',
       
    };
-      },
-    []);
-  
-  
+  }, []);
+    
+  const questionHandler = async () => {
+    const result = await state.showDialog({
+      kind: AppDialogKind.Question,
+      title: "Delete Ticket",
+      message: "Are you sure you want to delete this ticket?",
+      showCancelButton: false,
+    });
+    console.log("Dialog result:", result);
+    switch (result.button) {
+      case AppDialogButton.Yes:
+        console.log("User answered Yes");
+        break;
+      case AppDialogButton.No:
+        console.log("User answered No");
+        break;
+      case AppDialogButton.Cancel:
+        console.log("User cancelled the dialog");
+        break;
+    }
+  }
+
+  const inputHandler = async () => {
+    const result = await state.showDialog({
+      kind: AppDialogKind.InputString,
+      title: "Input Title",
+      message: "Enter something:",
+      isPassword: false,
+    });
+
+    console.log("Dialog result:", result);
+  }
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -139,8 +173,12 @@ export default function Home() {
         
       </main>
       <footer className={styles.footer}>
-        
+        <button onClick={async () => await state.showError("Error Title", "This is an error message.")}>Show Error Dialog</button>
+        <button onClick={questionHandler}>Show Question Dialog</button>
+        <button onClick={inputHandler}>Show Input Dialog</button>
       </footer>
+
+      <ModalDialogSwitcher />
     </div>
   );
 }
