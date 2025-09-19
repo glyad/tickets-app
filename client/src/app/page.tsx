@@ -1,95 +1,163 @@
-import Image from "next/image";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
+import { AgGridReact } from "ag-grid-react";
 import styles from "./page.module.css";
+import { useAppStore } from "./state/app-state";
+import { Assignee, Priority, Status, Ticket } from "./model";
+import { GridReadyEvent, RowSelectionOptions, SideBarDef } from 'ag-grid-community'; 
+import { ActionButtonRenderer } from "./action-button-renderer";
+import {
+  AllEnterpriseModule,
+  ColumnMenuModule,
+  ColumnsToolPanelModule,
+  ContextMenuModule,
+  FiltersToolPanelModule,
+  LicenseManager,
+  SetFilterModule,
+  ValidationModule
+} from "ag-grid-enterprise";
+import { useCallback, useMemo, useRef, useState } from "react";
+
+ModuleRegistry.registerModules([
+  AllCommunityModule, 
+  AllEnterpriseModule, 
+  SelectEditorModule,
+  SetFilterModule, 
+  ColumnMenuModule, 
+  ColumnsToolPanelModule, 
+  ContextMenuModule, 
+  FiltersToolPanelModule,
+  ValidationModule
+]);
+
+import { AllCommunityModule, ColDef, ModuleRegistry, SelectEditorModule } from 'ag-grid-community';
+import { ModalDialogSwitcher } from "./components/dialog/modal-dialog-switcher";
+import { AppDialogButton, AppDialogKind } from "./components/dialog";
+
+LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-094359}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{14 October 2025}____[v3]_[0102]_MTc2MDM5NjQwMDAwMA==beb8d54a4d6491a36d345e03edef69f5");
 
 export default function Home() {
+  const gridRef = useRef<AgGridReact<Ticket>>(null);
+  const onGridReady = useCallback((params: GridReadyEvent) => {
+    params.api.closeToolPanel();
+  }, []);
+  
+  const state = useAppStore((state) => state);
+  
+  const rowSelection: RowSelectionOptions = {
+    mode: 'singleRow'
+  };
+  
+  const [columnDefs] = useState([
+    { field: 'title', headerName: 'Title', sortable: true, filter: "agTextColumnFilter", flex: 2 }, {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      sortable: true,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        applyMiniFilterWhileTyping: true,
+      },
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: {
+          values: state.statuses
+      },
+      valueFormatter: (params: { value: Status }) => params.value.label,
+      enableCellChangeFlash: true,
+    }, 
+    {
+      field: 'priority',
+      headerName: 'Priority',
+      editable: true,
+      sortable: true,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        applyMiniFilterWhileTyping: true
+      },
+      cellEditor: 'agSelectCellEditor',
+      valueFormatter: (params: { value: Priority }) => params.value.label,
+      cellEditorParams: {
+        values: state.priorities
+      },
+      enableCellChangeFlash: true,
+    }, {
+      field: 'assignedTo',
+      headerName: 'Assignee',
+      editable: true,
+      sortable: true,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        applyMiniFilterWhileTyping: true
+      },
+      cellEditor: 'agSelectCellEditor',
+      valueFormatter: (params: { value: Assignee }) => params.value.label,
+      cellEditorParams: {
+          values: state.assignees,
+          useFormatter: true
+      },
+      enableCellChangeFlash: true,
+    }, {      
+      headerName: 'Actions',
+      cellRenderer: ActionButtonRenderer      
+    }
+  ]); 
+
+  const sideBar: SideBarDef = useMemo(() => { 
+    return {
+      toolPanels: [
+        {
+          id: 'filters',
+          labelDefault: 'Filters',
+          labelKey: 'filters',
+          iconKey: 'filter',
+          toolPanel: 'agFiltersToolPanel',
+          minWidth: 180,
+          maxWidth: 400,
+          width: 250
+        }
+      ],
+      defaultToolPanel: 'filters',
+      
+   };
+  }, []);
+    
+  const inputHandler = async () => {
+    const result = await state.showDialog({
+      kind: AppDialogKind.InputString,
+      title: "Input Title",
+      message: "Enter something:",
+      isPassword: false,
+    });
+
+    console.log("Dialog result:", result);
+  }
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+        
+        <div style={{ width: '1100px', height: 600 }}>
+          <button onClick={inputHandler}>Add Ticket</button>
+          <AgGridReact
+            ref={gridRef}
+            rowData={state.tickets}
+            columnDefs={columnDefs}
+            pagination={true}
+            paginationPageSize={20}
+            rowSelection={rowSelection}
+            sideBar={sideBar}      
+            onGridReady={onGridReady}      
         />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
         </div>
+
+        
       </main>
       <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        {/* <button onClick={async () => await state.showError("Error Title", "This is an error message.")}>Show Error Dialog</button> */}        
       </footer>
+
+      <ModalDialogSwitcher />
     </div>
   );
 }
